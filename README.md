@@ -1,7 +1,2 @@
-# Printf function
-This repository holds a replica of the standard C library of the printf function
-
-Contributors
-	1. Yonas Yirgu
-	2. Tahir Mohammedaman
+0x11. C - printf team project
 

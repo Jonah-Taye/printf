@@ -1,73 +1,66 @@
 #include "main.h"
 
-/**
- * handler - detects format specifiers and prints the given string
- * Central processing unit for the _printf function
- * @givenstr: original string supplied to _printf
- * @args: list of arguments passed to _printf
- * @forms: Spec structure array
- *
- * Return: number of total bytes written
- */
+void print_buffer(char buffer[], int *buff_ind);
 
-int handler(const char *givenstr, va_list args, Spec forms[])
-{
-	int i, j, len = 0;
-
-	for (i = 0; givenstr[i] != '\0'; i++)
-	{
-		if (givenstr[i] == '%')
-		{
-			if (givenstr[i + 1] == '\0')
-				return (-1);
-			if (givenstr[i + 1] == ' ')
-				while (givenstr[i + 1] == ' ')
-					i++;
-			if (givenstr[i + 1] == '%')
-			{
-				len += _putchar('%');
-				i++;
-				continue;
-			}
-			for (j = 0; j < 6; j++)
-			{
-				if (givenstr[i + 1] == forms[j].form)
-				{
-					len += forms[j].fun(args);
-					i++;
-					break;
-				}
-			}
-			if (j == 6)
-				len += _putchar('%');
-			continue;
-		}
-		len += _putchar(givenstr[i]);
-	}
-	return (len);
-}
 /**
- * _printf - the spotlight function which operates like the actual printf
- * @format: character string
- * Return: number of characters printed
+ * _printf - Printf function
+ * @format: format.
+ * Return: Printed chars.
  */
 int _printf(const char *format, ...)
 {
-	va_list args;
-	int len;
-	Spec specs_arr[] = {
-		{'c', char_form},
-		{'s', string_form},
-		{'i', int_form},
-		{'d', int_form},
-		{'b', bin_form},
-		{'r', rev_form},
-	};
+	int i, printed = 0, printed_chars = 0;
+	int flags, width, precision, size, buff_ind = 0;
+	va_list list;
+	char buffer[BUFF_SIZE];
 
 	if (format == NULL)
 		return (-1);
-	va_start(args, format);
-	len = handler(format, args, specs_arr);
-	va_end(args);
-	return (len);
+
+	va_start(list, format);
+
+	for (i = 0; format && format[i] != '\0'; i++)
+	{
+		if (format[i] != '%')
+		{
+			buffer[buff_ind++] = format[i];
+			if (buff_ind == BUFF_SIZE)
+				print_buffer(buffer, &buff_ind);
+			/* write(1, &format[i], 1);*/
+			printed_chars++;
+		}
+		else
+		{
+			print_buffer(buffer, &buff_ind);
+			flags = get_flags(format, &i);
+			width = get_width(format, &i, list);
+			precision = get_precision(format, &i, list);
+			size = get_size(format, &i);
+			++i;
+			printed = handle_print(format, &i, list, buffer,
+				flags, width, precision, size);
+			if (printed == -1)
+				return (-1);
+			printed_chars += printed;
+		}
+	}
+
+	print_buffer(buffer, &buff_ind);
+
+	va_end(list);
+
+	return (printed_chars);
+}
+
+/**
+ * print_buffer - Prints the contents of the buffer if it exist
+ * @buffer: Array of chars
+ * @buff_ind: Index at which to add next char, represents the length.
+ */
+void print_buffer(char buffer[], int *buff_ind)
+{
+	if (*buff_ind > 0)
+		write(1, &buffer[0], *buff_ind);
+
+	*buff_ind = 0;
 }
